@@ -1,0 +1,6 @@
+title = "TOML Example"
+description = "TOML desc"
+publisher = "TOML publisher"
+creator = ["One", "Two", "Three"]
+subject = ["I", "II", "III"]
+language = "lang"
