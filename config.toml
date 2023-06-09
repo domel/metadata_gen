@@ -1,6 +1,10 @@
-title = "TOML Example"
-description = "TOML desc"
-publisher = "TOML publisher"
-creator = ["One", "Two", "Three"]
-subject = ["I", "II", "III"]
-language = "lang"
+title = "Mizar Mathematical Library Knowledge Graph"
+creator = ["Dominik Tomaszuk", "Łukasz Szeremeta", "Artur Korniłowicz"]
+subject = ["mathematics", "knowledge graph", "property graph"]
+description = "The Mizar system consists of a formal language for writing mathematical definitions and proofs, a proof assistant, which is able to mechanically check proofs written in this language, and a library of formalized mathematics, which can be used in the proof of new theorems."
+publisher = "University of Bialystok"
+type = "Dataset"
+language = "en-US"
+license = "https://creativecommons.org/licenses/by/4.0/"
+rights = "CC BY 4.0"
+source = "https://mizar.uwb.edu.pl"
