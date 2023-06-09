@@ -17,10 +17,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -43,25 +40,67 @@ public class MetadataGen {
         }
     }
 
+    private static FileConfig loadConfig(String configFilePath) {
+        try {
+            InputStream configStream = MetadataGen.class.getClassLoader().getResourceAsStream(configFilePath);
+            if (configStream == null) {
+                throw new IllegalArgumentException("Config file not found in resources");
+            }
+
+            File tempFile = File.createTempFile("config", ".toml");
+            tempFile.deleteOnExit();
+
+            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = configStream.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
+            return FileConfig.of(tempFile);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config file", e);
+        }
+    }
+
+
     public static void main(String[] args) {
-        if (args.length < 2) {
-            System.out.println("Usage: metadata-gen <esx_path> <config_file_path>");
+
+        if (args.length < 1) {
+            System.err.println("""
+                    Usage: metadata-gen <esx_path> <config_file_path>
+
+                    * esx_path - path to the directory containing ESX files
+                    * config_file_path - path to the TOML config file (optional, default: config.toml)""");
+            System.exit(1);
+        } else {
+            System.err.println("Generating metadata...");
         }
 
+        // load config file (default: config.toml)
+        String configFilePath = args.length > 1 ? args[1] : "config.toml";
         String esx_path = args[0];
-        String configFilePath = args[1];
 
         // Parse TOML file
-        FileConfig config = FileConfig.of(configFilePath);
-        config.load();
-
-        System.err.println("Generating metadata...");
+        FileConfig config = null;
+        try {
+            config = args.length > 1 ? FileConfig.of(configFilePath) : loadConfig(configFilePath);
+            config.load();
+        } catch (NullPointerException e) {
+            System.err.println("Config file not found");
+            System.exit(1);
+        } catch (Exception e) {
+            System.err.println("Failed to parse config file");
+            System.exit(1);
+        }
 
         // Create a new XML document
         Document document = DocumentHelper.createDocument();
         Element root = document.addElement("mm:metadata").addNamespace("dc", "http://purl.org/dc/terms/").addNamespace("mm", "https://ii.uwb.edu.pl/mizarmetadata/");
 
         // Add all entries from the config file
+        // Sort the entries alphabetically
         TreeMap<String, Object> sortedConfig = new TreeMap<>(config.valueMap());
         for (Map.Entry<String, Object> entry : sortedConfig.entrySet()) {
             if (entry.getValue() instanceof List<?> values) {
@@ -75,11 +114,15 @@ public class MetadataGen {
         }
 
         // last modified data
-
         File directory = new File(esx_path);
         File[] files = directory.listFiles();
 
-        Arrays.sort(Objects.requireNonNull(files), (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+        try {
+            Arrays.sort(Objects.requireNonNull(files), (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+        } catch (NullPointerException e) {
+            System.err.println("No files found in the <esx_path> directory");
+            System.exit(1);
+        }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String latestDate = dateFormat.format(new Date(files[0].lastModified()));
