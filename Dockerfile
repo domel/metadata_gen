@@ -5,11 +5,11 @@
 # https://github.com/lszeremeta
 #
 # Usage:
-# docker build -t metadata-gen .
-# docker run --rm -v <data_path>:/app/data metadata-gen /app/data/esx_mml > metadata.xml
-# docker run --rm -v <data_path>:/app/data metadata-gen /app/data/esx_mml /app/data/config.toml > metadata.xml
+# docker build -t metadata_gen .
+# docker run --rm -v <data_path>:/app/data metadata_gen /app/data/esx_mml > metadata.xml
+# docker run --rm -v <data_path>:/app/data metadata_gen /app/data/esx_mml /app/data/config.toml > metadata.xml
 #
-# Replace <data_path> with the path to your directory containing ESX files (required) and config.toml file (optional).
+# Replace <data_path> with the path to your directory containing ESX MML files (required) and config.toml file (optional).
 
 # Build stage
 FROM maven:3.9.2-eclipse-temurin-17 as build
